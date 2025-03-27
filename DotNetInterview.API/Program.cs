@@ -4,13 +4,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
-
-
 // Add services to the container.
 
-builder.Services.AddControllers();
+// builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -53,19 +49,32 @@ app.MapGroup("/items")
     .WithTags("Items");
 
 // List all items
-app.MapGet("/items/all", (DataContext context) => "Get all items");
-// Get a single item
-app.MapGet("/items/{id}", (DataContext context, int id) => $"You requested item with ID: {id}");
-// Create a new item
-app.MapPost("/items", (DataContext context, Item newItem) => 
+app.MapGet("/items/all", async (DataContext context) =>
 {
-    return Results.Ok("This is a POST request");
+    return await context.Items.ToListAsync(); 
+});
+// Get a single item
+app.MapGet("/items/{id}", async (DataContext context, int id) =>{ 
+    return await context.Items.FindAsync(id);
+});
+// Create a new item
+app.MapPost("/items", async (DataContext context, Item newItem) =>
+{
+    await context.Items.AddAsync(newItem);
+    context.SaveChanges();
 });
 // Update an item
-app.MapPut("/items/{id}", (DataContext context, int id) => $"You updated item with ID: {id}");
-// Delete an item
-app.MapDelete("/items/{id}", (DataContext context, int id) => $"This is a DELETE request for {id}");
+app.MapPut("/items/", async (DataContext context, Item newItem) => {
+    var id = newItem.Id;
+    var oldItem = await context.Items.FindAsync(id);
 
-app.MapControllers();
+    context.SaveChanges();
+    });
+// Delete an item
+app.MapDelete("/items/{id}", async (DataContext context, int id) => {
+    return $"This is a DELETE request for {id}";
+    });
+
+// app.MapControllers();
 
 app.Run();
