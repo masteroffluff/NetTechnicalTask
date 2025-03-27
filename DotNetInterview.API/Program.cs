@@ -49,7 +49,7 @@ app.MapGroup("/items")
     .WithTags("Items");
 
 // List all items
-app.MapGet("/items/all", async (DataContext context) =>
+app.MapGet("/items", async (DataContext context) =>
 {
     return await context.Items.ToListAsync(); 
 });
@@ -67,7 +67,11 @@ app.MapPost("/items", async (DataContext context, Item newItem) =>
 app.MapPut("/items/", async (DataContext context, Item newItem) => {
     var id = newItem.Id;
     var oldItem = await context.Items.FindAsync(id);
-
+   // remove 
+   await context.Items.DeleteAsync(oldItem)
+   // replace
+    await context.Items.AddAsync(newItem);
+    // somthing something
     context.SaveChanges();
     });
 // Delete an item
