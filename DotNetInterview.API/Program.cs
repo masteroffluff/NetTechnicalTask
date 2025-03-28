@@ -51,11 +51,17 @@ app.MapGroup("/items")
 // List all items
 app.MapGet("/items", async (DataContext context) =>
 {
-    return await context.Items.ToListAsync(); 
+    return await context.Items.ToListAsync();
 });
 // Get a single item
-app.MapGet("/items/{id}", async (DataContext context, int id) =>{ 
-    return await context.Items.FindAsync(id);
+app.MapGet("/items/{id}", async (DataContext context, int id) =>
+{
+    var item = await context.Items.FindAsync(id);
+    if (item == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(item);
 });
 // Create a new item
 app.MapPost("/items", async (DataContext context, Item newItem) =>
@@ -64,21 +70,33 @@ app.MapPost("/items", async (DataContext context, Item newItem) =>
     context.SaveChanges();
 });
 // Update an item
-app.MapPut("/items/", async (DataContext context, Item newItem) => {
+app.MapPut("/items/", async (DataContext context, Item newItem) =>
+{
     var id = newItem.Id;
     var oldItem = await context.Items.FindAsync(id);
-   // remove 
-   await context.Items.DeleteAsync(oldItem)
-   // replace
+    if (oldItem == null)
+    {
+        return Results.NotFound();
+    }
+    context.Items.Remove(oldItem);
+    // replace
     await context.Items.AddAsync(newItem);
-    // somthing something
     context.SaveChanges();
-    });
+    return Results.NoContent();
+});
 // Delete an item
-app.MapDelete("/items/{id}", async (DataContext context, int id) => {
-    return $"This is a DELETE request for {id}";
-    });
+app.MapDelete("/items/{id}", async (DataContext context, int id) =>
+{
+    var item = await context.Items.FindAsync(id);
+    if (item == null)
+    {
+        return Results.NotFound();
+    }
+    context.Items.Remove(item);
+    context.SaveChanges();
+    return Results.NoContent();
+});
 
-// app.MapControllers();
+
 
 app.Run();
