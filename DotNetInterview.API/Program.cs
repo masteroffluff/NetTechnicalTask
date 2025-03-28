@@ -2,6 +2,8 @@ using DotNetInterview.API;
 using DotNetInterview.API.Domain;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("DotNetInterview.Tests")] // give access to the integration tests
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -16,8 +18,6 @@ connection.Open();
 builder.Services.AddDbContext<DataContext>(options => options.UseSqlite(connection));
 
 var app = builder.Build();
-
-
 
 
 // Configure the HTTP request pipeline.
@@ -54,7 +54,7 @@ app.MapGet("/items", async (DataContext context) =>
     return await context.Items.ToListAsync();
 });
 // Get a single item
-app.MapGet("/items/{id}", async (DataContext context, int id) =>
+app.MapGet("/items/{id}", async (DataContext context, Guid id) =>
 {
     var item = await context.Items.FindAsync(id);
     if (item == null)
@@ -64,8 +64,9 @@ app.MapGet("/items/{id}", async (DataContext context, int id) =>
     return Results.Ok(item);
 });
 // Create a new item
-app.MapPost("/items", async (DataContext context, Item newItem) =>
+app.MapPost("/items/", async (DataContext context, Item newItem) =>
 {
+    newItem.Id = new Guid();
     await context.Items.AddAsync(newItem);
     context.SaveChanges();
 });
@@ -85,7 +86,7 @@ app.MapPut("/items/", async (DataContext context, Item newItem) =>
     return Results.NoContent();
 });
 // Delete an item
-app.MapDelete("/items/{id}", async (DataContext context, int id) =>
+app.MapDelete("/items/{id}", async (DataContext context, Guid id) =>
 {
     var item = await context.Items.FindAsync(id);
     if (item == null)
