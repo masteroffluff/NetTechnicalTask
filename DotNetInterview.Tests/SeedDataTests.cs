@@ -2,7 +2,7 @@ using DotNetInterview.API;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace DotNetInterview.Tests
+namespace DotNetInterview.Tests.A_Seedtests
 {
     public class SeedDataTests
     {

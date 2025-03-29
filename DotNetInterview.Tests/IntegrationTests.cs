@@ -3,14 +3,14 @@ using System.Net.Http;
 using System.Net.Http.Json;
 // using System.Text;
 using Microsoft.AspNetCore.Mvc.Testing;
-// using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using DotNetInterview.API;
 using DotNetInterview.API.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace DotNetInterview.Tests
+namespace DotNetInterview.Tests.B_Itegration
 {
     [TestFixture]
     public class IntegrationTests
@@ -31,10 +31,12 @@ namespace DotNetInterview.Tests
             {
                 builder.ConfigureServices(services =>
                 {
-
+                    // services.AddDbContext<DataContext>(options =>
+                    //     options.UseInMemoryDatabase("TestDatabase"));
                     // Here, you can directly configure the logging service.
                     services.AddLogging(builder =>
                     {
+
 
                         builder.AddConsole();  // Enable console logs
                         builder.SetMinimumLevel(LogLevel.Debug);  // Adjust log level if needed
@@ -53,7 +55,7 @@ namespace DotNetInterview.Tests
         [Test]
         public async Task GetAllItems_ReturnsOk()
         {
-            Console.WriteLine("Get all items returns ok and has content");
+            
             // Act
             var response = await _client.GetAsync("/items");
 
@@ -67,7 +69,7 @@ namespace DotNetInterview.Tests
         public async Task GetSingleItem_ReturnsOk_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Item 1", Reference = "ITM1", Price=40.00m };
+            var newItem = new Item { Name = "Item 1", Reference = "ITM1", Price = 40.00m };
             await CreateItem(newItem);
 
             // Act
@@ -82,13 +84,17 @@ namespace DotNetInterview.Tests
         public async Task GetSingleItem_ReturnsVariationData_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Item 2", Reference = "ITM2", Price=40.00m,
-                Variations = new List <Variation> { new Variation{
+            var newItem = new Item
+            {
+                Name = "Item 2",
+                Reference = "ITM2",
+                Price = 40.00m,
+                Variations = new List<Variation> { new Variation{
                                 Size = "10",
                                 Quantity = 8
                 }}
 
-             };
+            };
             await CreateItem(newItem);
 
 
@@ -98,15 +104,16 @@ namespace DotNetInterview.Tests
             // Assert
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-
+            Console.WriteLine("JSON:");
+            Console.WriteLine(content);
             var contentItem = JsonConvert.DeserializeObject<Item>(content);
-            Assert.IsTrue(contentItem.Variations.Any()); 
+            Assert.IsTrue(contentItem.Variations.Any());
         }
         [Test]
         public async Task GetSingleItem_ReturnsNotFound_WhenItemDoesNotExist()
         {
             // Act
-            var response = await _client.GetAsync("/items/99999999-9999-9999-9999-999999999999"); 
+            var response = await _client.GetAsync("/items/99999999-9999-9999-9999-999999999999");
             // 99999999-9999-9999-9999-999999999999 should not exist
 
             // Assert
@@ -117,7 +124,7 @@ namespace DotNetInterview.Tests
         public async Task GetSingleItem_ReturnsBadREquest_WhenIemWrongFormat()
         {
             // Act
-            var response = await _client.GetAsync("/items/999"); 
+            var response = await _client.GetAsync("/items/999");
             // 999 can't be parsed into a guid
 
             // Assert
@@ -128,9 +135,9 @@ namespace DotNetInterview.Tests
         public async Task CreateItem_ReturnsCreated()
         {
             // Arrange
-            var newItem = new Item { Name = "New Item", Reference = "New1", Price=40.00m };
+            var newItem = new Item { Name = "New Item", Reference = "New1", Price = 40.00m };
 
-            var response = await _client.PostAsJsonAsync("/items",newItem);
+            var response = await _client.PostAsJsonAsync("/items", newItem);
             // Assert
             response.EnsureSuccessStatusCode();
             var createdItem = await response.Content.ReadAsStringAsync();
@@ -142,13 +149,13 @@ namespace DotNetInterview.Tests
         public async Task UpdateItem_ReturnsNoContent_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Old Item",  Reference = "Old1", Price=40.00m  };
+            var newItem = new Item { Name = "Old Item", Reference = "Old1", Price = 40.00m };
             await CreateItem(newItem);
 
-            var updatedItem = new Item { Id = newItem.Id, Name = "Updated Item", Reference = "Upd1", Price=40.00m  };
+            var updatedItem = new Item { Id = newItem.Id, Name = "Updated Item", Reference = "Upd1", Price = 40.00m };
 
             // Act
-            var response = await _client.PutAsJsonAsync("/items",updatedItem);
+            var response = await _client.PutAsJsonAsync("/items", updatedItem);
             // Assert
             // Status Code 204 (No Content)
             Assert.That((int)response.StatusCode, Is.EqualTo(204));
@@ -162,7 +169,7 @@ namespace DotNetInterview.Tests
         public async Task DeleteItem_ReturnsNoContent_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Item to delete",  Reference = "Del1", Price=40.00m   };
+            var newItem = new Item { Name = "Item to delete", Reference = "Del1", Price = 40.00m };
             await CreateItem(newItem);
 
             // Act
@@ -178,13 +185,14 @@ namespace DotNetInterview.Tests
         private async Task CreateItem(Item item)
         {
 
-            
-            var response = await _client.PostAsJsonAsync("/items",item);
+
+            var response = await _client.PostAsJsonAsync("/items", item);
             var responseBody = await response.Content.ReadAsStringAsync();
             var responseItem = JsonConvert.DeserializeObject<Item>(responseBody);
-            if(responseItem == null){
+            if (responseItem == null)
+            {
                 return;
-                }
+            }
             item.Id = responseItem.Id;
         }
     }
