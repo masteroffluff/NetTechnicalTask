@@ -1,5 +1,6 @@
 using NUnit.Framework;
-// using System.Net.Http;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
 // using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -8,38 +9,41 @@ using DotNetInterview.API;
 using DotNetInterview.API.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace MyApiTests
 {
-
+    [TestFixture]
     public class ApiTests
     {
-        private readonly HttpClient _client;
-        private readonly WebApplicationFactory<Program> _factory;
+        private HttpClient _client;
+        private WebApplicationFactory<Program> _factory;
 
         public ApiTests()
         {
-            _factory = new WebApplicationFactory<Program>()
-                .WithWebHostBuilder(builder =>
-                {
-                    // builder.ConfigureServices(services =>
-                    // {
-                       
-                    //     // Here, you can directly configure the logging service.
-                    //     services.AddLogging(builder =>
-                    //     {
-                            
-                    //         builder.AddConsole();  // Enable console logs
-                    //         builder.SetMinimumLevel(LogLevel.Debug);  // Adjust log level if needed
-                    //     });
-                    // });
-                });
-            _client = _factory.CreateClient();
+
         }
 
         [SetUp]
         public async Task Setup()
         {
+            _factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+
+                    // Here, you can directly configure the logging service.
+                    services.AddLogging(builder =>
+                    {
+
+                        builder.AddConsole();  // Enable console logs
+                        builder.SetMinimumLevel(LogLevel.Debug);  // Adjust log level if needed
+                    });
+                });
+            });
+
+            _client = _factory.CreateClient();
             // Reset the database before each test
             using var scope = _factory.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<DataContext>();
@@ -50,6 +54,7 @@ namespace MyApiTests
         [Test]
         public async Task GetAllItems_ReturnsOk()
         {
+            Console.WriteLine("Get all items returns ok and has content");
             // Act
             var response = await _client.GetAsync("/items");
 
@@ -63,7 +68,7 @@ namespace MyApiTests
         public async Task GetSingleItem_ReturnsOk_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Item 1" };
+            var newItem = new Item { Name = "Item 1", Reference = "ITM1", Price=40.00m };
             await CreateItem(newItem);
 
             // Act
@@ -79,46 +84,42 @@ namespace MyApiTests
         public async Task GetSingleItem_ReturnsNotFound_WhenItemDoesNotExist()
         {
             // Act
-            var response = await _client.GetAsync("/items/999"); // 999 should not exist
+            var response = await _client.GetAsync("/items/99999999-9999-9999-9999-999999999999"); 
+            // 99999999-9999-9999-9999-999999999999 should not exist
 
             // Assert
-            Assert.AreEqual(404, (int)response.StatusCode); // Status Code 404
+            // Status Code 400 as 999 can't be parsed to  a guid
+            Assert.That((int)response.StatusCode, Is.EqualTo(404));
         }
 
         [Test]
         public async Task CreateItem_ReturnsCreated()
         {
             // Arrange
-            var newItem = new Item { Name = "New Item" };
-            var json = $"{{\"name\": \"{newItem.Name}\"}}";
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var newItem = new Item { Name = "New Item", Reference = "New1", Price=40.00m };
 
-            // Act
-            var response = await _client.PostAsync("/items", content);
-
+            var response = await _client.PostAsJsonAsync("/items",newItem);
             // Assert
             response.EnsureSuccessStatusCode();
             var createdItem = await response.Content.ReadAsStringAsync();
-            Assert.IsTrue(createdItem.Contains(newItem.Name)); // Ensure the created item contains the name
+            Assert.IsTrue(createdItem.Contains("New Item")); // Ensure the created item contains the name
+            // Assert.That(response.IsSucessStatusCode, Is.True);
         }
 
         [Test]
         public async Task UpdateItem_ReturnsNoContent_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Old Item" };
+            var newItem = new Item { Name = "Old Item",  Reference = "Old1", Price=40.00m  };
             await CreateItem(newItem);
 
-            var updatedItem = new Item { Id = newItem.Id, Name = "Updated Item" };
-            var json = $"{{\"id\": {updatedItem.Id}, \"name\": \"{updatedItem.Name}\"}}";
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var updatedItem = new Item { Id = newItem.Id, Name = "Updated Item", Reference = "Upd1", Price=40.00m  };
 
             // Act
-            var response = await _client.PutAsync("/items", content);
-
+            var response = await _client.PutAsJsonAsync("/items",updatedItem);
             // Assert
-            Assert.AreEqual(204, (int)response.StatusCode); // Status Code 204 (No Content)
-
+            // Status Code 204 (No Content)
+            Assert.That((int)response.StatusCode, Is.EqualTo(204));
             // Verify the update
             var getResponse = await _client.GetAsync($"/items/{updatedItem.Id}");
             var updatedContent = await getResponse.Content.ReadAsStringAsync();
@@ -129,7 +130,7 @@ namespace MyApiTests
         public async Task DeleteItem_ReturnsNoContent_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Item to delete" };
+            var newItem = new Item { Name = "Item to delete",  Reference = "Del1", Price=40.00m   };
             await CreateItem(newItem);
 
             // Act
@@ -139,14 +140,20 @@ namespace MyApiTests
             Assert.That((int)response.StatusCode, Is.EqualTo(204));// Status Code 204 (No Content)
             // Verify the item is deleted
             var getResponse = await _client.GetAsync($"/items/{newItem.Id}");
-            Assert.AreEqual(404, (int)getResponse.StatusCode); // 404 Not Found
+            Assert.That((int)getResponse.StatusCode, Is.EqualTo(404)); // 404 Not Found
         }
 
         private async Task CreateItem(Item item)
         {
-            var json = $"{{\"name\": \"{item.Name}\"}}";
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            await _client.PostAsync("/items", content);
+
+            
+            var response = await _client.PostAsJsonAsync("/items",item);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var responseItem = JsonConvert.DeserializeObject<Item>(responseBody);
+            if(responseItem == null){
+                return;
+                }
+            item.Id = responseItem.Id;
         }
     }
 }

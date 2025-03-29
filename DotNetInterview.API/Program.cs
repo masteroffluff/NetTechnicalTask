@@ -54,9 +54,13 @@ app.MapGet("/items", async (DataContext context) =>
     return await context.Items.ToListAsync();
 });
 // Get a single item
-app.MapGet("/items/{id}", async (DataContext context, Guid id) =>
+app.MapGet("/items/{id}", async (DataContext context, string id) =>
 {
-    var item = await context.Items.FindAsync(id);
+    if (!Guid.TryParse(id, out Guid validId))
+    {
+        return Results.BadRequest("Invalid ID format.");
+    }
+    var item = await context.Items.FindAsync(validId);
     if (item == null)
     {
         return Results.NotFound();
@@ -66,9 +70,11 @@ app.MapGet("/items/{id}", async (DataContext context, Guid id) =>
 // Create a new item
 app.MapPost("/items/", async (DataContext context, Item newItem) =>
 {
+    Console.WriteLine(newItem.Name);
     newItem.Id = new Guid();
-    await context.Items.AddAsync(newItem);
-    context.SaveChanges();
+    context.Items.Add(newItem);
+    await context.SaveChangesAsync();
+    return Results.Created("/items/{id}", newItem);
 });
 // Update an item
 app.MapPut("/items/", async (DataContext context, Item newItem) =>
@@ -86,9 +92,13 @@ app.MapPut("/items/", async (DataContext context, Item newItem) =>
     return Results.NoContent();
 });
 // Delete an item
-app.MapDelete("/items/{id}", async (DataContext context, Guid id) =>
+app.MapDelete("/items/{id}", async (DataContext context, string id) =>
 {
-    var item = await context.Items.FindAsync(id);
+    if (!Guid.TryParse(id, out Guid validId))
+    {
+        return Results.BadRequest("Invalid ID format.");
+    }
+    var item = await context.Items.FindAsync(validId);
     if (item == null)
     {
         return Results.NotFound();
