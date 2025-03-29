@@ -51,7 +51,15 @@ app.MapGroup("/items")
 // List all items
 app.MapGet("/items", async (DataContext context) =>
 {
-    return await context.Items.ToListAsync();
+    var items = await context.Items
+    .Include(i => i.Variations)  // eager loading
+    .ToListAsync(); 
+
+    return items;
+});
+app.MapGet("/variations", async (DataContext context) =>
+{
+    return await context.Variations.ToListAsync(); //TODO:remove at end, test route to make sure i'm loading the variations properly 
 });
 // Get a single item
 app.MapGet("/items/{id}", async (DataContext context, string id) =>
@@ -60,7 +68,11 @@ app.MapGet("/items/{id}", async (DataContext context, string id) =>
     {
         return Results.BadRequest("Invalid ID format.");
     }
-    var item = await context.Items.FindAsync(validId);
+    var item = await context.Items
+    .Where(i => i.Id == validId)
+    .Include(i => i.Variations)  // eager loading
+    .ToListAsync(); 
+
     if (item == null)
     {
         return Results.NotFound();
@@ -70,7 +82,7 @@ app.MapGet("/items/{id}", async (DataContext context, string id) =>
 // Create a new item
 app.MapPost("/items/", async (DataContext context, Item newItem) =>
 {
-    Console.WriteLine(newItem.Name);
+
     newItem.Id = new Guid();
     context.Items.Add(newItem);
     await context.SaveChangesAsync();
