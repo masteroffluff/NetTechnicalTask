@@ -1,25 +1,24 @@
 using NUnit.Framework;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
-// using System.Threading.Tasks;
+// using System.Text;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
+// using Microsoft.EntityFrameworkCore;
 using DotNetInterview.API;
 using DotNetInterview.API.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace MyApiTests
+namespace DotNetInterview.Tests
 {
     [TestFixture]
-    public class ApiTests
+    public class IntegrationTests
     {
         private HttpClient _client;
         private WebApplicationFactory<Program> _factory;
 
-        public ApiTests()
+        public IntegrationTests()
         {
 
         }
@@ -79,7 +78,30 @@ namespace MyApiTests
             var content = await response.Content.ReadAsStringAsync();
             Assert.IsTrue(content.Contains(newItem.Name)); // Ensure the content contains the name of the item
         }
+        [Test]
+        public async Task GetSingleItem_ReturnsVariationData_WhenItemExists()
+        {
+            // Arrange
+            var newItem = new Item { Name = "Item 2", Reference = "ITM2", Price=40.00m,
+                Variations = new List <Variation> { new Variation{
+                                Size = "10",
+                                Quantity = 8
+                }}
 
+             };
+            await CreateItem(newItem);
+
+
+            // Act
+            var response = await _client.GetAsync($"/items/{newItem.Id}");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+
+            var contentItem = JsonConvert.DeserializeObject<Item>(content);
+            Assert.IsTrue(contentItem.Variations.Any()); 
+        }
         [Test]
         public async Task GetSingleItem_ReturnsNotFound_WhenItemDoesNotExist()
         {
@@ -88,10 +110,20 @@ namespace MyApiTests
             // 99999999-9999-9999-9999-999999999999 should not exist
 
             // Assert
-            // Status Code 400 as 999 can't be parsed to  a guid
+            // Status Code 404
             Assert.That((int)response.StatusCode, Is.EqualTo(404));
         }
+        [Test]
+        public async Task GetSingleItem_ReturnsBadREquest_WhenIemWrongFormat()
+        {
+            // Act
+            var response = await _client.GetAsync("/items/999"); 
+            // 999 can't be parsed into a guid
 
+            // Assert
+            // Status Code 400
+            Assert.That((int)response.StatusCode, Is.EqualTo(400));
+        }
         [Test]
         public async Task CreateItem_ReturnsCreated()
         {
