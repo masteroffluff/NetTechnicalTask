@@ -53,7 +53,7 @@ app.MapGroup("/items")
 // List all items
 app.MapGet("/items", async (ItemService itemService) =>
 {
-    var items = itemService.GetAllItems();
+    var items = await itemService.GetAllItems();
     return items;
 });
 

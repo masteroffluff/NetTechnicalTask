@@ -32,7 +32,7 @@ public class ItemService
 
         return Pricing.ApplyRules(item, currentTime);
     }
-    async public Task<List<Item>> GetAllItems()
+    public async Task<List<Item>> GetAllItems()
     {
         var items = await _context.Items
             .Include(c => c.Variations)
@@ -44,7 +44,7 @@ public class ItemService
         return result;
     }
 
-    async public Task<Item?> GetSingleItem(Guid id)
+    public async Task<Item?> GetSingleItem(Guid id)
     {
         var item = await _context.Items
         .Where(i => i.Id == id)
@@ -59,14 +59,14 @@ public class ItemService
         Item result = ApplyPricingRules(item);
         return result;
     }
-    async public Task<Item> PostItem(Item newItem)
+    public async Task<Item> PostItem(Item newItem)
     {
         newItem.Id = new Guid();
         _context.Items.Add(newItem);
         await _context.SaveChangesAsync();
         return ApplyPricingRules(newItem);
     }
-    async public Task<bool> UpdateItem(Item newItem)
+    public async Task<bool> UpdateItem(Item newItem)
     {
         var id = newItem.Id;
         var oldItem = await _context.Items
@@ -88,7 +88,7 @@ public class ItemService
         await _context.SaveChangesAsync();
         return true;
     }
-    async public Task<bool> DeleteItem(Guid id)
+    public async Task<bool> DeleteItem(Guid id)
     {
         var oldItem = await _context.Items
                 .Where(i => i.Id == id)
