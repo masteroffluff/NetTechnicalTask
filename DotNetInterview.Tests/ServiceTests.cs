@@ -21,10 +21,10 @@ namespace DotNetInterview.Tests.C_ServiceTests
             DateTime datetime = new DateTime(2025, 3, 29, 15, 30, 0);
             decimal price = 100.00m;
             // Act
-            var result = methodInfo.Invoke(null, new object[] { price, datetime });
+            var result = methodInfo?.Invoke(null, new object[] { price, datetime });
 
             // Assert the result
-            Assert.AreEqual(100.00m,result);
+            Assert.That(result, Is.EqualTo(100.00m));
         }
         [Test]
         public void TestTimeBaseRuleforMonday_notDiscountHours()
@@ -40,10 +40,10 @@ namespace DotNetInterview.Tests.C_ServiceTests
 
             // Act
 
-            var result = methodInfo.Invoke(null, new object[] { price, datetime });
+            var result = methodInfo?.Invoke(null, new object[] { price, datetime });
 
             // Assert the result
-            Assert.AreEqual(100.00m,result);
+            Assert.That(result, Is.EqualTo(100.00m));
         }
         [Test]
         public void TestTimeBaseRuleforMonday_atDiscountHours()
@@ -56,10 +56,10 @@ namespace DotNetInterview.Tests.C_ServiceTests
             DateTime datetime = new DateTime(2025, 3, 24, 12, 30, 0);
             decimal price = 100.00m;
             // Act
-            var result = methodInfo.Invoke(null, new object[] { price, datetime });
+            var result = methodInfo?.Invoke(null, new object[] { price, datetime });
 
             // Assert the result
-            Assert.AreEqual(50.00m, result);
+            Assert.That(result, Is.EqualTo(50.00m));
         }
         [Test]
         public void TestQuantityRule_1Item()
@@ -71,10 +71,10 @@ namespace DotNetInterview.Tests.C_ServiceTests
             int quantity = 1;
             decimal price = 100.00m;
             // Act
-            var result = methodInfo.Invoke(null, new object[] { price, quantity });
+            var result = methodInfo?.Invoke(null, new object[] { price, quantity });
 
-            // Assert the result
-            Assert.AreEqual(100.00m,result);
+            // Assert the result is unchanged
+            Assert.That(result, Is.EqualTo(100.00m));
         }
         [Test]
         public void TestQuantityRule_6Items()
@@ -86,10 +86,10 @@ namespace DotNetInterview.Tests.C_ServiceTests
             int quantity = 6;
             decimal price = 100.00m;
             // Act
-            var result = methodInfo.Invoke(null, new object[] { price, quantity });
+            var result = methodInfo?.Invoke(null, new object[] { price, quantity });
 
-            // Assert the result
-            Assert.AreEqual(90.00m,result);
+            // Assert the result is 10% lower
+            Assert.That(result, Is.EqualTo(90.00m));
         }
         public void TestQuantityRule_11Items()
         {
@@ -100,10 +100,10 @@ namespace DotNetInterview.Tests.C_ServiceTests
             int quantity = 11;
             decimal price = 100.00m;
             // Act
-            var result = methodInfo.Invoke(null, new object[] { price, quantity });
+            var result = methodInfo?.Invoke(null, new object[] { price, quantity });
 
             // Assert the result
-            Assert.AreEqual(80.00m,result);
+            Assert.That(result, Is.EqualTo(80.00m));
         }
     }
 }

@@ -44,7 +44,7 @@ public class ItemService
         return result;
     }
 
-    async public Task<Item> GetSingleItem(Guid id)
+    async public Task<Item?> GetSingleItem(Guid id)
     {
         var item = await _context.Items
         .Where(i => i.Id == id)
