@@ -6,6 +6,7 @@ namespace DotNetInterview.API
     public sealed class DataContext : DbContext
     {
         public DbSet<Item> Items { get; set; }
+        public DbSet<Variation> Variations { get; set; } 
 
         public DataContext(DbContextOptions<DataContext> options)
             : base(options)
