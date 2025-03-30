@@ -1,5 +1,6 @@
 using DotNetInterview.API;
 using DotNetInterview.API.Domain;
+using DotNetInterview.API.Service;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
@@ -16,6 +17,7 @@ builder.Services.AddSwaggerGen();
 var connection = new SqliteConnection("Data Source=DotNetInterview;Mode=Memory;Cache=Shared");
 connection.Open();
 builder.Services.AddDbContext<DataContext>(options => options.UseSqlite(connection));
+builder.Services.AddScoped<ItemService>();
 
 var app = builder.Build();
 
@@ -48,30 +50,28 @@ app.Use(async (context, next) =>
 app.MapGroup("/items")
     .WithTags("Items");
 
-// List all items
-app.MapGet("/items", async (DataContext context) =>
-{
-    var items = await context.Items
-    .Include(i => i.Variations)  // eager loading
-    .ToListAsync(); 
-
-    return items;
-});
 app.MapGet("/variations", async (DataContext context) =>
 {
     return await context.Variations.ToListAsync(); //TODO:remove at end, test route to make sure i'm loading the variations properly 
 });
-// Get a single item
-app.MapGet("/items/{id}", async (DataContext context, string id) =>
+
+// List all items
+app.MapGet("/items", async (ItemService itemService) =>
 {
+    var items = itemService.GetAllItems();
+    return items;
+});
+
+// Get a single item
+app.MapGet("/items/{id}", async (ItemService itemService, string id) =>
+{
+    // validate the id 
     if (!Guid.TryParse(id, out Guid validId))
     {
         return Results.BadRequest("Invalid ID format.");
     }
-    var item = await context.Items
-    .Where(i => i.Id == validId)
-    .Include(i => i.Variations)  // eager loading
-    .ToListAsync(); 
+    // get the item from the item service
+    var item = await itemService.GetSingleItem(validId);
 
     if (item == null)
     {
@@ -80,43 +80,32 @@ app.MapGet("/items/{id}", async (DataContext context, string id) =>
     return Results.Ok(item);
 });
 // Create a new item
-app.MapPost("/items/", async (DataContext context, Item newItem) =>
+app.MapPost("/items/", async (ItemService itemService, Item newItem) =>
 {
-
-    newItem.Id = new Guid();
-    context.Items.Add(newItem);
-    await context.SaveChangesAsync();
-    return Results.Created("/items/{id}", newItem);
+    return await itemService.PostItem(newItem);
 });
 // Update an item
-app.MapPut("/items/", async (DataContext context, Item newItem) =>
+app.MapPut("/items/", async (ItemService itemService, Item newItem) =>
 {
-    var id = newItem.Id;
-    var oldItem = await context.Items.FindAsync(id);
-    if (oldItem == null)
+    bool itemFoundAndUpdated = await itemService.UpdateItem(newItem);
+    if (!itemFoundAndUpdated)
     {
         return Results.NotFound();
     }
-    context.Items.Remove(oldItem);
-    // replace
-    await context.Items.AddAsync(newItem);
-    context.SaveChanges();
     return Results.NoContent();
 });
 // Delete an item
-app.MapDelete("/items/{id}", async (DataContext context, string id) =>
+app.MapDelete("/items/{id}", async (ItemService itemService, string id) =>
 {
     if (!Guid.TryParse(id, out Guid validId))
     {
         return Results.BadRequest("Invalid ID format.");
     }
-    var item = await context.Items.FindAsync(validId);
-    if (item == null)
+    bool itemFoundAndDeleted = await itemService.DeleteItem(validId);
+    if (!itemFoundAndDeleted)
     {
         return Results.NotFound();
     }
-    context.Items.Remove(item);
-    context.SaveChanges();
     return Results.NoContent();
 });
 
