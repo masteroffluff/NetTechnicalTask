@@ -16,15 +16,11 @@ namespace DotNetInterview.Tests.C_ServiceTests
         {
             // Arrange
             var pricingClassType = typeof(Pricing);
-
-            // Get the private method using reflection
-            // Use reflection to get the private static method
             var methodInfo = pricingClassType.GetMethod("TimeRule", BindingFlags.NonPublic | BindingFlags.Static);
-
             // Saturday 29th of March 2025 
             DateTime datetime = new DateTime(2025, 3, 29, 15, 30, 0);
             decimal price = 100.00m;
-            // Invoke the private static method
+            // Act
             var result = methodInfo.Invoke(null, new object[] { price, datetime });
 
             // Assert the result
@@ -36,14 +32,14 @@ namespace DotNetInterview.Tests.C_ServiceTests
             // Arrange
             var pricingClassType = typeof(Pricing);
 
-            // Get the private method using reflection
-            // Use reflection to get the private static method
             var methodInfo = pricingClassType.GetMethod("TimeRule", BindingFlags.NonPublic | BindingFlags.Static);
 
             // Monday 24th of March 2025 8:30am
             DateTime datetime = new DateTime(2025, 3, 24, 8, 30, 0);
             decimal price = 100.00m;
-            // Invoke the private static method
+
+            // Act
+
             var result = methodInfo.Invoke(null, new object[] { price, datetime });
 
             // Assert the result
@@ -54,15 +50,12 @@ namespace DotNetInterview.Tests.C_ServiceTests
         {
             // Arrange
             var pricingClassType = typeof(Pricing);
-
-            // Get the private method using reflection
-            // Use reflection to get the private static method
             var methodInfo = pricingClassType.GetMethod("TimeRule", BindingFlags.NonPublic | BindingFlags.Static);
 
             // Monday 24th of March 2025 12:30am
             DateTime datetime = new DateTime(2025, 3, 24, 12, 30, 0);
             decimal price = 100.00m;
-            // Invoke the private static method
+            // Act
             var result = methodInfo.Invoke(null, new object[] { price, datetime });
 
             // Assert the result
@@ -73,14 +66,11 @@ namespace DotNetInterview.Tests.C_ServiceTests
         {
             // Arrange
             var pricingClassType = typeof(Pricing);
-
-            // Get the private method using reflection
-            // Use reflection to get the private static method
             var methodInfo = pricingClassType.GetMethod("QuantityRule", BindingFlags.NonPublic | BindingFlags.Static);
 
             int quantity = 1;
             decimal price = 100.00m;
-            // Invoke the private static method
+            // Act
             var result = methodInfo.Invoke(null, new object[] { price, quantity });
 
             // Assert the result
@@ -91,14 +81,11 @@ namespace DotNetInterview.Tests.C_ServiceTests
         {
             // Arrange
             var pricingClassType = typeof(Pricing);
-
-            // Get the private method using reflection
-            // Use reflection to get the private static method
             var methodInfo = pricingClassType.GetMethod("QuantityRule", BindingFlags.NonPublic | BindingFlags.Static);
 
             int quantity = 6;
             decimal price = 100.00m;
-            // Invoke the private static method
+            // Act
             var result = methodInfo.Invoke(null, new object[] { price, quantity });
 
             // Assert the result
@@ -108,14 +95,11 @@ namespace DotNetInterview.Tests.C_ServiceTests
         {
             // Arrange
             var pricingClassType = typeof(Pricing);
-
-            // Get the private method using reflection
-            // Use reflection to get the private static method
             var methodInfo = pricingClassType.GetMethod("QuantityRule", BindingFlags.NonPublic | BindingFlags.Static);
 
             int quantity = 11;
             decimal price = 100.00m;
-            // Invoke the private static method
+            // Act
             var result = methodInfo.Invoke(null, new object[] { price, quantity });
 
             // Assert the result

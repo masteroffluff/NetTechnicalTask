@@ -50,11 +50,6 @@ app.Use(async (context, next) =>
 app.MapGroup("/items")
     .WithTags("Items");
 
-app.MapGet("/variations", async (DataContext context) =>
-{
-    return await context.Variations.ToListAsync(); //TODO:remove at end, test route to make sure i'm loading the variations properly 
-});
-
 // List all items
 app.MapGet("/items", async (ItemService itemService) =>
 {
@@ -82,7 +77,9 @@ app.MapGet("/items/{id}", async (ItemService itemService, string id) =>
 // Create a new item
 app.MapPost("/items/", async (ItemService itemService, Item newItem) =>
 {
-    return await itemService.PostItem(newItem);
+    
+    Item item =  await itemService.PostItem(newItem);
+    return Results.Ok(item);
 });
 // Update an item
 app.MapPut("/items/", async (ItemService itemService, Item newItem) =>
@@ -97,10 +94,12 @@ app.MapPut("/items/", async (ItemService itemService, Item newItem) =>
 // Delete an item
 app.MapDelete("/items/{id}", async (ItemService itemService, string id) =>
 {
+    // validate the incoming id 
     if (!Guid.TryParse(id, out Guid validId))
     {
         return Results.BadRequest("Invalid ID format.");
     }
+    // if id good delete the item 
     bool itemFoundAndDeleted = await itemService.DeleteItem(validId);
     if (!itemFoundAndDeleted)
     {
