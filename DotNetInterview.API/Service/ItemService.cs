@@ -25,7 +25,7 @@ public class ItemService
         _context = context;
 
     }
-    // business logic for pricing rules
+    // apply pricing rules
     static Item ApplyPricingRules(Item item)
     {
         DateTime currentTime = DateTime.Now;
@@ -76,16 +76,29 @@ public class ItemService
         {
             return false;
         }
-        foreach (var v in oldItem.Variations.ToList())
+        // using a transaction to manage the updates and ensure atomicity
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            _context.Variations.Remove(v);
-        }
+            // remove old variations and items
+            foreach (var v in oldItem.Variations.ToList())
+            {
+                _context.Variations.Remove(v);
+            }
 
-        _context.Items.Remove(oldItem);
-        // replace
-        _context.Items.Add(newItem);
-        await _context.SaveChangesAsync();
-        return true;
+            _context.Items.Remove(oldItem);
+            // replace
+            _context.Items.Add(newItem);
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (System.Exception)
+        {
+
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
     public async Task<bool> DeleteItem(Guid id)
     {
