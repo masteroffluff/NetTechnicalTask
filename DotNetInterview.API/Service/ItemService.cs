@@ -61,7 +61,6 @@ public class ItemService
     }
     public async Task<Item> PostItem(Item newItem)
     {
-        newItem.Id = new Guid();
         _context.Items.Add(newItem);
         await _context.SaveChangesAsync();
         return ApplyPricingRules(newItem);

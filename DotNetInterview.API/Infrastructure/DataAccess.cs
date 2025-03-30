@@ -11,7 +11,7 @@ namespace DotNetInterview.API.Infrastructure{
             connection.Open();
             
             services.AddDbContext<DataContext>(options => options.UseSqlite(connection));
-            services.AddSingleton(connection); 
+            // services.AddSingleton(connection); 
         }
     }
 }
