@@ -105,5 +105,27 @@ namespace DotNetInterview.Tests.C_ServiceTests
             // Assert the result
             Assert.That(result, Is.EqualTo(80.00m));
         }
+        public void TestApplyRules1()
+        {
+            // Arrange
+            var newItem = new Item
+            {
+                Name = "Item 2",
+                Reference = "ITM2",
+                Price = 40.00m,
+                Variations = new List<Variation> { new Variation{
+                                Size = "10",
+                                Quantity = 8
+                }}
+
+            };
+            // Monday 24th of March 2025 12:30am
+            DateTime datetime = new DateTime(2025, 3, 24, 12, 30, 0);
+            // Act
+            var result = Pricing.ApplyRules(newItem, datetime);
+            // Assert
+            Assert.That(result.Price, Is.EqualTo(50.00m));
+
+        }
     }
 }

@@ -48,8 +48,7 @@ public class Pricing
     {
 
         int totalQuantity = item.Variations.Sum(v => v.Quantity);
-        DateTime Now = DateTime.Now;
-
+        
         decimal quantityDiscountPrice = QuantityRule(item.Price, totalQuantity);
         decimal timeDiscountPrice = TimeRule(item.Price, time);
 

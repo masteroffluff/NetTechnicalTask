@@ -1,5 +1,6 @@
 using DotNetInterview.API;
 using DotNetInterview.API.Domain;
+using DotNetInterview.API.Infrastructure;
 using DotNetInterview.API.Service;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -14,9 +15,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // connection to database
-var connection = new SqliteConnection("Data Source=DotNetInterview;Mode=Memory;Cache=Shared");
-connection.Open();
-builder.Services.AddDbContext<DataContext>(options => options.UseSqlite(connection));
+// Moved this to its own layer to ease rpacement, also added strings to the config file 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=DotNetInterview;Mode=Memory;Cache=Shared";
+builder.Services.AddDataAccess(connectionString);
 builder.Services.AddScoped<ItemService>();
 
 var app = builder.Build();
@@ -77,13 +79,30 @@ app.MapGet("/items/{id}", async (ItemService itemService, string id) =>
 // Create a new item
 app.MapPost("/items/", async (ItemService itemService, Item newItem) =>
 {
-    
-    Item item =  await itemService.PostItem(newItem);
+    // validate inbound data
+    if (
+        newItem.Name == "" ||
+        newItem.Reference == "" ||
+        newItem.Price == 0.00m
+    )
+    {
+        return Results.BadRequest("Invalid Item Data.");
+    }
+    Item item = await itemService.PostItem(newItem);
     return Results.Ok(item);
 });
 // Update an item
 app.MapPut("/items/", async (ItemService itemService, Item newItem) =>
 {
+    // validate inbound data (no need to validate the Id as this happens on the next step)
+    if (
+        newItem.Name == "" ||
+        newItem.Reference == "" ||
+        newItem.Price == 0.00m
+    )
+    {
+        return Results.BadRequest("Invalid Item Data.");
+    }
     bool itemFoundAndUpdated = await itemService.UpdateItem(newItem);
     if (!itemFoundAndUpdated)
     {
