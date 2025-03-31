@@ -7,7 +7,11 @@ namespace DotNetInterview.Tests.A_Seedtests
     public class SeedDataTests
     {
         private DataContext _dataContext;
+        [TearDownAttribute]
+        public void TearDownAttribute(){
+            _dataContext.Dispose();
 
+        }
         [SetUp]
         public void Setup()
         {
