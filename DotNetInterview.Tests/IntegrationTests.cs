@@ -18,12 +18,14 @@ namespace DotNetInterview.Tests.B_Itegration
     {
         private HttpClient _client;
         private WebApplicationFactory<Program> _factory;
-        private SqliteConnection _connection; 
-        private DataContext _dataContext;
+        private SqliteConnection? _connection; 
+        private DataContext? _dataContext;
 
-        public IntegrationTests()
-        {
 
+        [TearDownAttribute]
+        public void TearDownAttribute(){
+            _client.Dispose();
+            _factory.Dispose();
         }
 
         [SetUp]
@@ -75,7 +77,7 @@ namespace DotNetInterview.Tests.B_Itegration
             // Assert
             response.EnsureSuccessStatusCode(); // Status Code 200-299
             var content = await response.Content.ReadAsStringAsync();
-            Assert.IsNotEmpty(content);
+            Assert.That(content, Is.Not.Empty);
         }
 
         [Test]
@@ -91,7 +93,7 @@ namespace DotNetInterview.Tests.B_Itegration
             // Assert
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            Assert.IsTrue(content.Contains(newItem.Name)); // Ensure the content contains the name of the item
+            Assert.That(content.Contains(newItem.Name), Is.True); // Ensure the content contains the name of the item
         }
         [Test]
         public async Task GetSingleItem_ReturnsVariationData_WhenItemExists()
@@ -120,7 +122,7 @@ namespace DotNetInterview.Tests.B_Itegration
             Console.WriteLine("JSON:");
             Console.WriteLine(content);
             var contentItem = JsonConvert.DeserializeObject<Item>(content);
-            Assert.IsTrue(contentItem.Variations.Any());
+            Assert.That(contentItem?.Variations.Count, Is.EqualTo(1));
         }
         [Test]
         public async Task GetSingleItem_ReturnsNotFound_WhenItemDoesNotExist()
@@ -154,7 +156,7 @@ namespace DotNetInterview.Tests.B_Itegration
             // Assert
             response.EnsureSuccessStatusCode();
             var createdItem = await response.Content.ReadAsStringAsync();
-            Assert.IsTrue(createdItem.Contains("New Item")); // Ensure the created item contains the name
+            Assert.That(createdItem.Contains("New Item"), Is.True); // Ensure the created item contains the name
             // Assert.That(response.IsSucessStatusCode, Is.True);
         }
 
@@ -175,7 +177,7 @@ namespace DotNetInterview.Tests.B_Itegration
             // Verify the update
             var getResponse = await _client.GetAsync($"/items/{updatedItem.Id}");
             var updatedContent = await getResponse.Content.ReadAsStringAsync();
-            Assert.IsTrue(updatedContent.Contains(updatedItem.Name));
+            Assert.That(updatedContent.Contains(updatedItem.Name), Is.True);
         }
 
         [Test]
