@@ -9,6 +9,7 @@ using DotNetInterview.API.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Microsoft.Data.Sqlite;
 
 namespace DotNetInterview.Tests.B_Itegration
 {
@@ -17,6 +18,8 @@ namespace DotNetInterview.Tests.B_Itegration
     {
         private HttpClient _client;
         private WebApplicationFactory<Program> _factory;
+        private SqliteConnection _connection; 
+        private DataContext _dataContext;
 
         public IntegrationTests()
         {
@@ -26,14 +29,24 @@ namespace DotNetInterview.Tests.B_Itegration
         [SetUp]
         public async Task Setup()
         {
+            var dbName = Guid.NewGuid().ToString();
             _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
                 builder.ConfigureServices(services =>
                 {
-                    // services.AddDbContext<DataContext>(options =>
-                    //     options.UseInMemoryDatabase("TestDatabase"));
-                    // Here, you can directly configure the logging service.
+                    _connection = new SqliteConnection("DataSource=:memory:");
+                    _connection.Open();
+
+                    // Configure DataContext to use SQLite
+                    var options = new DbContextOptionsBuilder<DataContext>()
+                        .UseSqlite(_connection) // Use SQLite instead of in-memory
+                        .Options;
+
+                    _dataContext = new DataContext(options);
+                    _dataContext.Database.EnsureCreated(); // Create schema
+
+
                     services.AddLogging(builder =>
                     {
 
@@ -55,7 +68,7 @@ namespace DotNetInterview.Tests.B_Itegration
         [Test]
         public async Task GetAllItems_ReturnsOk()
         {
-            
+
             // Act
             var response = await _client.GetAsync("/items");
 
@@ -149,7 +162,7 @@ namespace DotNetInterview.Tests.B_Itegration
         public async Task UpdateItem_ReturnsNoContent_WhenItemExists()
         {
             // Arrange
-            var newItem = new Item { Name = "Old Item", Reference = "Old1", Price = 40.00m };
+            var newItem = new Item { Name = "Old Item", Reference = "TEST", Price = 40.00m };
             await CreateItem(newItem);
 
             var updatedItem = new Item { Id = newItem.Id, Name = "Updated Item", Reference = "Upd1", Price = 40.00m };
