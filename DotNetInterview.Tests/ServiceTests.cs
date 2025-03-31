@@ -4,7 +4,7 @@ using NUnit.Framework;
 using DotNetInterview.API.Service;
 using DotNetInterview.API.Domain;
 
-namespace DotNetInterview.Tests.C_ServiceTests
+namespace DotNetInterview.Tests
 // unit tests for the item service and pricing class
 {
 
